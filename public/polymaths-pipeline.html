@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QUESTORA - Polymath's Pipeline</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brass: {
+              300: '#fcd34d',
+              400: '#fbbf24',
+              500: '#f59e0b',
+              600: '#d97706',
+              700: '#b45309',
+            },
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- React 18 & ReactDOM via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel Standalone for in-browser JSX parsing -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <!-- Lucide Icons via unpkg -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Canvas Confetti CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.4/dist/confetti.browser.min.js"></script>
+
+  <style>
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.05); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 3s infinite ease-in-out;
+    }
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans selection:bg-amber-500 selection:text-slate-950 overflow-x-hidden">
+  <div id="root"></div>
+
+  <!-- APPLICATION SCRIPT WITH BABEL -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // =========================================================================
+    // 1. EDITABLE JAVASCRIPT QUESTION ARRAY (UNIVERSAL KNOWLEDGE DATABASE)
+    // Teachers & students can freely customize, add, or alter subjects & questions below!
+    // =========================================================================
+    const subjectData = [
+      { id: 1, type: "science", question: "If 2x + 7 = 19, what is x?", options: ["4", "5", "6", "7"], answer: "6", points: 20 },
+      { id: 2, type: "history", question: "Who was the first president of the USA?", options: ["Adams", "Lincoln", "Washington", "Jefferson"], answer: "Washington", points: 20 },
+      { id: 3, type: "math", question: "What is the square root of 144?", options: ["10", "11", "12", "14"], answer: "12", points: 20 },
+      { id: 4, type: "science", question: "What is the chemical symbol for gold?", options: ["Ag", "Au", "Fe", "Gd"], answer: "Au", points: 25 },
+      { id: 5, type: "math", question: "What is the value of 7 cubed (7^3)?", options: ["343", "243", "49", "512"], answer: "343", points: 25 },
+      { id: 6, type: "history", question: "What year did humans first step foot on the Moon?", options: ["1965", "1969", "1972", "1975"], answer: "1969", points: 25 },
+      { id: 7, type: "science", question: "Which planet has the most extensive and visible ring system?", options: ["Jupiter", "Saturn", "Uranus", "Neptune"], answer: "Saturn", points: 20 },
+      { id: 8, type: "math", question: "What is the sum of angles in a flat Euclidean triangle?", options: ["90°", "180°", "270°", "360°"], answer: "180°", points: 20 },
+      { id: 9, type: "literature", question: "Who authored 'Twenty Thousand Leagues Under the Sea'?", options: ["H.G. Wells", "Jules Verne", "Conan Doyle", "Mary Shelley"], answer: "Jules Verne", points: 25 },
+      { id: 10, type: "geography", question: "Which river is widely recognized as the longest in South America?", options: ["Amazon", "Parana", "Orinoco", "Magdalena"], answer: "Amazon", points: 20 },
+    ];
+
+    // =========================================================================
+    // 2. WEB AUDIO SYNTHESIZER (Crisp Game Sound FX without external files)
+    // =========================================================================
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = true;
+      }
+      init() {
+        if (!this.ctx && window.AudioContext) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+      playRotate() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const t = this.ctx.currentTime;
+        osc.frequency.setValueAtTime(500, t);
+        osc.frequency.exponentialRampToValueAtTime(260, t + 0.07);
+        gain.gain.setValueAtTime(0.12, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.07);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.08);
+      }
+      playLocked() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        const t = this.ctx.currentTime;
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, t);
+        gain.gain.setValueAtTime(0.15, t);
+        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(t);
+        osc.stop(t + 0.13);
+      }
+      playUnlock() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = this.ctx.currentTime + idx * 0.06;
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, t);
+          gain.gain.setValueAtTime(0.15, t);
+          gain.gain.exponentialRampToValueAtTime(0.005, t + 0.22);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.23);
+        });
+      }
+      playWin() {
+        if (!this.enabled) return;
+        this.init();
+        if (!this.ctx) return;
+        [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const t = this.ctx.currentTime + i * 0.08;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(f, t);
+          gain.gain.setValueAtTime(0.2, t);
+          gain.gain.exponentialRampToValueAtTime(0.01, t + 0.5);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(t);
+          osc.stop(t + 0.55);
+        });
+      }
+    }
+    const sounds = new SoundEngine();
+
+    // =========================================================================
+    // 3. 6x6 LEVEL BLUEPRINTS (Guaranteed Solvable Layouts)
+    // =========================================================================
+    const LEVELS = [
+      {
+        level: 1,
+        title: "Circuit Genesis",
+        targetSec: 45,
+        lockedPos: [2, 2],
+        questionId: 1,
+        template: [
+          [{ type: 'valve', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 3 }, { type: 'tee', targetRot: 1 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 1 }, { type: 'elbow', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'tee', targetRot: 2 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 3 }, { type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 0 }, { type: 'tank', targetRot: 3 }],
+        ]
+      },
+      {
+        level: 2,
+        title: "Kinetic Junctions",
+        targetSec: 60,
+        lockedPos: [3, 3],
+        questionId: 3,
+        template: [
+          [{ type: 'valve', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 2 }],
+          [{ type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'tee', targetRot: 2 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 1 }],
+          [{ type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 1 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'tank', targetRot: 3 }],
+        ]
+      },
+      {
+        level: 3,
+        title: "Universal Matrix",
+        targetSec: 75,
+        lockedPos: [1, 4],
+        questionId: 4,
+        template: [
+          [{ type: 'valve', targetRot: 2 }, { type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 2 }],
+          [{ type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'tee', targetRot: 1 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'elbow', targetRot: 0 }, { type: 'tee', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 2 }, { type: 'straight', targetRot: 0 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 0 }, { type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 0 }, { type: 'elbow', targetRot: 2 }],
+          [{ type: 'elbow', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'cross', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 0 }],
+          [{ type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'elbow', targetRot: 0 }, { type: 'straight', targetRot: 1 }, { type: 'straight', targetRot: 1 }, { type: 'tank', targetRot: 0 }],
+        ]
+      }
+    ];
+
+    // Direction Ports: 0 = Top, 1 = Right, 2 = Bottom, 3 = Left
+    function getPorts(type, rot) {
+      let base = [];
+      if (type === 'straight') base = [0, 2];
+      else if (type === 'elbow') base = [0, 1];
+      else if (type === 'tee') base = [0, 1, 2];
+      else if (type === 'cross') base = [0, 1, 2, 3];
+      else if (type === 'valve') base = [1, 2];
+      else if (type === 'tank') base = [0, 3];
+      return base.map(d => (d + rot) % 4);
+    }
+
+    // =========================================================================
+    // 4. MAIN QUESTORA PIPELINE GAME COMPONENT
+    // =========================================================================
+    function PolymathPipelineApp() {
+      const [levelIdx, setLevelIdx] = useState(0);
+      const blueprint = LEVELS[levelIdx] || LEVELS[0];
+
+      const [grid, setGrid] = useState([]);
+      const [score, setScore] = useState(0);
+      const [highScore, setHighScore] = useState(0);
+      const [timer, setTimer] = useState(0);
+      const [isLevelClear, setIsLevelClear] = useState(false);
+      const [soundOn, setSoundOn] = useState(true);
+
+      // Question Modal State
+      const [activeQuiz, setActiveQuiz] = useState(null);
+      const [quizFeedback, setQuizFeedback] = useState(null);
+
+      // AI Hint State
+      const [hintText, setHintText] = useState(null);
+      const [hintTile, setHintTile] = useState(null);
+      const [hintsLeft, setHintsLeft] = useState(3);
+
+      // Load persistent progression from localStorage
+      useEffect(() => {
+        try {
+          const savedHigh = localStorage.getItem('questora_pipeline_high_score');
+          if (savedHigh) setHighScore(parseInt(savedHigh, 10));
+          const savedScore = localStorage.getItem('questora_pipeline_score');
+          if (savedScore) setScore(parseInt(savedScore, 10));
+        } catch(e) {}
+      }, []);
+
+      // Initialize Grid
+      const setupLevel = useCallback((lvl) => {
+        const rows = [];
+        for (let r = 0; r < 6; r++) {
+          const row = [];
+          for (let c = 0; c < 6; c++) {
+            const tmpl = lvl.template[r][c];
+            const isStart = r === 0 && c === 0;
+            const isFinish = r === 5 && c === 5;
+            const isLocked = r === lvl.lockedPos[0] && c === lvl.lockedPos[1];
+            
+            let initialRot = tmpl.targetRot;
+            if (!isStart && !isFinish) {
+              initialRot = (tmpl.targetRot + Math.floor(Math.random() * 3) + 1) % 4;
+            }
+
+            row.push({
+              r, c,
+              type: tmpl.type,
+              rotation: initialRot,
+              isLocked,
+              questionId: isLocked ? lvl.questionId : null,
+              isUnlocked: !isLocked,
+              isFlowing: false,
+              isStart,
+              isFinish
+            });
+          }
+          rows.push(row);
+        }
+        setGrid(rows);
+        setIsLevelClear(false);
+        setTimer(0);
+        setHintText(null);
+        setHintTile(null);
+      }, []);
+
+      useEffect(() => {
+        setupLevel(blueprint);
+      }, [blueprint, setupLevel]);
+
+      // Timer
+      useEffect(() => {
+        let interval = null;
+        if (!isLevelClear) {
+          interval = setInterval(() => {
+            setTimer(prev => prev + 1);
+          }, 1000);
+        }
+        return () => clearInterval(interval);
+      }, [isLevelClear]);
+
+      // Star Rating Calculator
+      const getStars = () => {
+        if (timer <= blueprint.targetSec * 0.8) return 3;
+        if (timer <= blueprint.targetSec * 1.3) return 2;
+        return 1;
+      };
+
+      // BFS Flow Validation
+      const evaluateFlow = useCallback((currentGrid) => {
+        if (!currentGrid || currentGrid.length === 0) return;
+
+        const visited = Array(6).fill(null).map(() => Array(6).fill(false));
+        const queue = [[0, 0]];
+        visited[0][0] = true;
+
+        const dr = [-1, 0, 1, 0];
+        const dc = [0, 1, 0, -1];
+
+        while (queue.length > 0) {
+          const [cr, cc] = queue.shift();
+          const curr = currentGrid[cr][cc];
+          const currPorts = getPorts(curr.type, curr.rotation);
+
+          for (const port of currPorts) {
+            const nr = cr + dr[port];
+            const nc = cc + dc[port];
+
+            if (nr >= 0 && nr < 6 && nc >= 0 && nc < 6 && !visited[nr][nc]) {
+              const nextCell = currentGrid[nr][nc];
+              const neededIncomingPort = (port + 2) % 4;
+              const nextPorts = getPorts(nextCell.type, nextCell.rotation);
+
+              if (nextPorts.includes(neededIncomingPort)) {
+                visited[nr][nc] = true;
+                queue.push([nr, nc]);
+              }
+            }
+          }
+        }
+
+        let finishReached = false;
+        const updated = currentGrid.map((row, r) =>
+          row.map((cell, c) => {
+            const flowing = visited[r][c];
+            if (r === 5 && c === 5 && flowing) finishReached = true;
+            return { ...cell, isFlowing: flowing };
+          })
+        );
+
+        setGrid(updated);
+
+        if (finishReached && !isLevelClear) {
+          handleVictory();
+        }
+      }, [isLevelClear, timer]);
+
+      // Victory Handler
+      const handleVictory = () => {
+        setIsLevelClear(true);
+        sounds.playWin();
+
+        if (window.confetti) {
+          window.confetti({
+            particleCount: 90,
+            spread: 80,
+            origin: { y: 0.6 },
+            colors: ['#4f46e5', '#10b981', '#f59e0b', '#06b6d4']
+          });
+        }
+
+        const stars = getStars();
+        const timeBonus = Math.max(15, Math.floor((blueprint.targetSec - timer) * 2));
+        const totalAward = 100 * stars + timeBonus;
+        const newScore = score + totalAward;
+
+        setScore(newScore);
+        if (newScore > highScore) {
+          setHighScore(newScore);
+          try {
+            localStorage.setItem('questora_pipeline_high_score', newScore.toString());
+          } catch(e) {}
+        }
+        try {
+          localStorage.setItem('questora_pipeline_score', newScore.toString());
+        } catch(e) {}
+      };
+
+      // Click Tile to Rotate or Unlock
+      const handleCellClick = (r, c) => {
+        if (isLevelClear) return;
+        const cell = grid[r][c];
+
+        if (cell.isLocked && !cell.isUnlocked) {
+          sounds.playLocked();
+          const q = subjectData.find(item => item.id === cell.questionId) || subjectData[0];
+          setActiveQuiz(q);
+          setQuizFeedback(null);
+          return;
+        }
+
+        if (cell.isStart || cell.isFinish) {
+          sounds.playRotate();
+          return;
+        }
+
+        sounds.playRotate();
+        const nextGrid = grid.map((row, ri) =>
+          row.map((colCell, ci) => {
+            if (ri === r && ci === c) {
+              return { ...colCell, rotation: (colCell.rotation + 1) % 4 };
+            }
+            return colCell;
+          })
+        );
+        evaluateFlow(nextGrid);
+      };
+
+      // Submit Quiz Answer
+      const handleQuizSubmit = (opt) => {
+        if (!activeQuiz) return;
+        if (opt === activeQuiz.answer) {
+          sounds.playUnlock();
+          setQuizFeedback({ isCorrect: true, text: `Correct! Critical segment unlocked (+${activeQuiz.points} pts)` });
+          setScore(prev => prev + activeQuiz.points);
+
+          setTimeout(() => {
+            const nextGrid = grid.map(row =>
+              row.map(cell => {
+                if (cell.questionId === activeQuiz.id) {
+                  return { ...cell, isUnlocked: true, isLocked: false };
+                }
+                return cell;
+              })
+            );
+            evaluateFlow(nextGrid);
+            setActiveQuiz(null);
+          }, 1200);
+        } else {
+          sounds.playLocked();
+          setQuizFeedback({ isCorrect: false, text: "Incorrect. Re-evaluate knowledge question!" });
+        }
+      };
+
+      // AI Hint
+      const triggerHint = () => {
+        if (hintsLeft <= 0) return;
+        setHintsLeft(prev => prev - 1);
+        sounds.playRotate();
+
+        const locked = grid.flat().find(c => c.isLocked && !c.isUnlocked);
+        if (locked) {
+          setHintText(`AI Guidance: Choke valve at (${locked.r + 1}, ${locked.c + 1}) is locked! Click to answer the ${blueprint.title} prompt.`);
+          setHintTile([locked.r, locked.c]);
+          return;
+        }
+
+        for (let r = 0; r < 6; r++) {
+          for (let c = 0; c < 6; c++) {
+            const cell = grid[r][c];
+            const targetRot = blueprint.template[r][c].targetRot;
+            if (!cell.isStart && !cell.isFinish && cell.rotation !== targetRot) {
+              setHintText(`AI Analysis: Rotate pipe at Row ${r + 1}, Column ${c + 1} to align fluid connection.`);
+              setHintTile([r, c]);
+              return;
+            }
+          }
+        }
+
+        setHintText("AI Status: All conduit segments are aligned! Trace fluid continuity to reservoir.");
+      };
+
+      const stars = getStars();
+
+      return (
+        <div className="min-h-screen bg-gradient-to-b from-slate-950 via-[#0b1021] to-slate-950 p-4 sm:p-6 lg:p-8 flex flex-col justify-between">
+          <div className="max-w-6xl mx-auto w-full space-y-6">
+            
+            {/* BRANDED HEADER (QUESTORA) */}
+            <header className="rounded-3xl bg-slate-900/80 backdrop-blur-xl border border-indigo-500/30 p-5 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                {/* QUESTORA Crest Logo */}
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-900 via-indigo-700 to-amber-500 p-0.5 shadow-lg shadow-indigo-500/30 flex items-center justify-center">
+                  <div className="w-full h-full rounded-[14px] bg-slate-950 flex items-center justify-center relative">
+                    <span className="text-xl">⚡</span>
+                  </div>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-300 via-emerald-300 to-cyan-300 tracking-widest text-lg uppercase">
+                      QUESTORA
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">
+                      Logic Prototype
+                    </span>
+                  </div>
+                  <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                    Polymath’s Pipeline
+                  </h1>
+                </div>
+              </div>
+
+              {/* Stats Counters */}
+              <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
+                <div className="px-3.5 py-2 rounded-2xl bg-indigo-950/70 border border-indigo-500/30">
+                  <span className="text-[10px] text-indigo-300 block uppercase font-sans font-semibold">Level</span>
+                  <span className="text-sm font-black text-white">{blueprint.level} / {LEVELS.length}</span>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-emerald-950/70 border border-emerald-500/30">
+                  <span className="text-[10px] text-emerald-300 block uppercase font-sans font-semibold">Score</span>
+                  <span className="text-sm font-black text-emerald-300">{score.toLocaleString()}</span>
+                </div>
+                <div className="px-3.5 py-2 rounded-2xl bg-amber-950/70 border border-amber-500/30">
+                  <span className="text-[10px] text-amber-300 block uppercase font-sans font-semibold">High Score</span>
+                  <span className="text-sm font-black text-amber-300">{highScore.toLocaleString()}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    const next = !soundOn;
+                    setSoundOn(next);
+                    sounds.enabled = next;
+                  }}
+                  className="p-2.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 transition-colors"
+                  title="Toggle Sound"
+                >
+                  {soundOn ? "🔊" : "🔇"}
+                </button>
+              </div>
+            </header>
+
+            {/* MAIN INTERACTIVE LAYOUT */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              
+              {/* 6x6 PIPELINE GRID */}
+              <main className="lg:col-span-8 rounded-3xl bg-slate-900/90 backdrop-blur-md border border-indigo-500/20 p-5 sm:p-7 shadow-2xl flex flex-col items-center">
+                <div className="w-full flex items-center justify-between mb-4 pb-3 border-b border-slate-800 text-xs font-mono">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+                    <span className="font-bold text-cyan-300">INPUT VALVE [0,0]</span>
+                  </div>
+                  <div className="text-slate-400 hidden sm:block text-[11px]">
+                    Click tiles to rotate • Solve quiz to unlock gray pipe
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2.5 h-2.5 rounded-full ${grid[5]?.[5]?.isFlowing ? 'bg-emerald-400 animate-pulse' : 'bg-slate-600'}`}></span>
+                    <span className={`font-bold ${grid[5]?.[5]?.isFlowing ? 'text-emerald-300' : 'text-slate-400'}`}>
+                      STORAGE TANK [5,5]
+                    </span>
+                  </div>
+                </div>
+
+                {/* Grid Box */}
+                <div className="p-3.5 sm:p-4 rounded-3xl bg-slate-950 border-2 border-indigo-900/60 shadow-[inset_0_0_30px_rgba(30,27,75,0.8)]">
+                  <div className="grid grid-cols-6 gap-2 sm:gap-2.5">
+                    {grid.map((row, r) =>
+                      row.map((cell, c) => {
+                        const isLocked = cell.isLocked && !cell.isUnlocked;
+                        const isHint = hintTile && hintTile[0] === r && hintTile[1] === c;
+
+                        return (
+                          <button
+                            key={`${r}-${c}`}
+                            onClick={() => handleCellClick(r, c)}
+                            disabled={isLevelClear}
+                            className={`relative w-11 h-11 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-2xl transition-all duration-300 flex items-center justify-center select-none ${
+                              isLocked
+                                ? 'bg-slate-800/80 border-2 border-dashed border-amber-500/60 shadow-lg shadow-amber-500/10 hover:border-amber-400 cursor-pointer'
+                                : cell.isStart
+                                ? 'bg-gradient-to-br from-cyan-900/60 to-slate-900 border-2 border-cyan-500/80 shadow-lg shadow-cyan-500/20'
+                                : cell.isFinish
+                                ? `bg-gradient-to-br from-emerald-900/60 to-slate-900 border-2 ${cell.isFlowing ? 'border-emerald-400 shadow-lg shadow-emerald-500/30' : 'border-slate-700'}`
+                                : cell.isFlowing
+                                ? 'bg-gradient-to-br from-indigo-950 via-slate-900 to-emerald-950/40 border-2 border-emerald-400/80 shadow-md shadow-emerald-500/20'
+                                : 'bg-slate-900 border border-slate-800 hover:border-indigo-500/60'
+                            } ${isHint ? 'ring-4 ring-amber-400 animate-bounce' : ''}`}
+                          >
+                            <div
+                              className="w-full h-full p-2 transition-transform duration-300"
+                              style={{ transform: `rotate(${cell.rotation * 90}deg)` }}
+                            >
+                              <PipeSVG type={cell.type} isFlowing={cell.isFlowing} isLocked={isLocked} />
+                            </div>
+
+                            {/* Padlock Overlay */}
+                            {isLocked && (
+                              <div className="absolute inset-0 rounded-2xl bg-slate-950/70 backdrop-blur-[2px] flex flex-col items-center justify-center text-amber-400 pointer-events-none">
+                                <span className="text-xl">🔒</span>
+                                <span className="text-[8px] sm:text-[9px] font-black uppercase text-amber-300 font-mono mt-0.5">
+                                  QUIZ
+                                </span>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Sub-bar */}
+                <div className="w-full mt-5 flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800 text-xs">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setupLevel(blueprint)}
+                      className="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold transition-all border border-slate-700"
+                    >
+                      ↺ Scramble / Reset
+                    </button>
+                    <button
+                      onClick={() => { setLevelIdx(0); setupLevel(LEVELS[0]); }}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-300 font-semibold border border-indigo-800/50"
+                    >
+                      L1
+                    </button>
+                    <button
+                      onClick={() => { setLevelIdx(1); setupLevel(LEVELS[1]); }}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-300 font-semibold border border-indigo-800/50"
+                    >
+                      L2
+                    </button>
+                    <button
+                      onClick={() => { setLevelIdx(2); setupLevel(LEVELS[2]); }}
+                      className="px-3 py-1.5 rounded-xl bg-indigo-950/60 hover:bg-indigo-900/60 text-indigo-300 font-semibold border border-indigo-800/50"
+                    >
+                      L3
+                    </button>
+                  </div>
+                  <div className="text-slate-400 font-mono text-xs">
+                    ⏱️ Elapsed: {timer}s
+                  </div>
+                </div>
+              </main>
+
+              {/* SIDE PANEL: OBJECTIVES, AI HINT, STAR METER */}
+              <aside className="lg:col-span-4 space-y-4">
+                
+                {/* SPEED PROGRESS STAR METER */}
+                <div className="rounded-3xl bg-slate-900/90 backdrop-blur-md border border-indigo-500/20 p-5 shadow-xl">
+                  <div className="flex items-center justify-between mb-3 text-xs">
+                    <span className="uppercase font-extrabold text-slate-400">Speed Star Rating</span>
+                    <span className="font-mono font-bold text-amber-400">Target: {blueprint.targetSec}s</span>
+                  </div>
+                  <div className="flex items-center justify-center gap-3 py-2">
+                    {[1, 2, 3].map(s => (
+                      <div
+                        key={s}
+                        className={`p-3 rounded-2xl border transition-all duration-300 flex flex-col items-center justify-center ${
+                          stars >= s
+                            ? 'bg-amber-500/15 border-amber-500/50 text-amber-400 shadow-lg shadow-amber-500/20 scale-105'
+                            : 'bg-slate-800/40 border-slate-800 text-slate-600 scale-95'
+                        }`}
+                      >
+                        <span className="text-2xl">{stars >= s ? "★" : "☆"}</span>
+                        <span className="text-[10px] font-mono font-bold mt-1">
+                          {s === 3 ? "Master" : s === 2 ? "Adept" : "Initiate"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-3">
+                    <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-emerald-400 via-amber-400 to-rose-500 transition-all duration-500"
+                        style={{ width: `${Math.min(100, (timer / blueprint.targetSec) * 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LEVEL OBJECTIVES */}
+                <div className="rounded-3xl bg-slate-900/90 backdrop-blur-md border border-indigo-500/20 p-5 shadow-xl space-y-3">
+                  <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                    <span className="text-emerald-400 font-bold">✓</span>
+                    <span>Level Objectives</span>
+                  </h3>
+                  <ul className="space-y-2.5 text-xs text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${grid[blueprint.lockedPos[0]]?.[blueprint.lockedPos[1]]?.isUnlocked ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}>
+                        {grid[blueprint.lockedPos[0]]?.[blueprint.lockedPos[1]]?.isUnlocked ? "✓" : "○"}
+                      </span>
+                      <span>Unlock gray conduit at ({blueprint.lockedPos[0] + 1}, {blueprint.lockedPos[1] + 1})</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${grid[5]?.[5]?.isFlowing ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-500'}`}>
+                        {grid[5]?.[5]?.isFlowing ? "✓" : "○"}
+                      </span>
+                      <span>Route continuous flow from Valve to Reservoir [5,5]</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="w-4 h-4 rounded-full flex items-center justify-center text-[10px] bg-amber-500/20 text-amber-300">
+                        ★
+                      </span>
+                      <span>Clear before {blueprint.targetSec}s for maximum stars</span>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* AI HINT */}
+                <div className="rounded-3xl bg-slate-900/90 backdrop-blur-md border border-indigo-500/20 p-5 shadow-xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-extrabold text-sm text-white flex items-center gap-2">
+                      <span>💡</span>
+                      <span>AI Guidance Co-Pilot</span>
+                    </h3>
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">
+                      {hintsLeft} Left
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400">
+                    Get an instant scan of locked segments and misaligned hydraulic elbows.
+                  </p>
+                  <button
+                    onClick={triggerHint}
+                    disabled={hintsLeft <= 0}
+                    className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition-all flex items-center justify-center gap-2"
+                  >
+                    <span>✨ Request AI Hint</span>
+                  </button>
+                  {hintText && (
+                    <div className="p-3 rounded-2xl bg-indigo-950/70 border border-indigo-500/40 text-xs text-indigo-200">
+                      <strong className="text-amber-300 block mb-0.5">🧠 AI Analysis:</strong>
+                      {hintText}
+                    </div>
+                  )}
+                </div>
+
+              </aside>
+            </div>
+
+            {/* QUIZ MODAL */}
+            {activeQuiz && (
+              <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="w-full max-w-lg rounded-3xl bg-slate-900 border-2 border-amber-500/60 p-6 sm:p-7 shadow-[0_0_50px_rgba(245,158,11,0.25)]">
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-2xl">🔒</span>
+                      <div>
+                        <span className="text-[10px] uppercase font-bold tracking-widest text-amber-400 font-mono">
+                          SECURITY CONDUIT LOCK
+                        </span>
+                        <h3 className="font-extrabold text-sm text-white">Unlock Pipeline Segment</h3>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-full bg-indigo-500/20 text-indigo-300">
+                      +{activeQuiz.points} pts
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 mb-5">
+                    <span className="text-[10px] uppercase font-black px-2 py-0.5 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">
+                      Topic: {activeQuiz.type}
+                    </span>
+                    <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                      {activeQuiz.question}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-5">
+                    {activeQuiz.options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleQuizSubmit(opt)}
+                        className="p-3.5 rounded-2xl border border-slate-700 bg-slate-800/80 hover:bg-slate-800 hover:border-amber-400 text-left font-semibold text-xs sm:text-sm text-slate-200 transition-all flex items-center justify-between"
+                      >
+                        <span>{opt}</span>
+                        <span className="text-xs font-mono text-slate-500">{String.fromCharCode(65 + idx)}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {quizFeedback && (
+                    <div className={`p-3.5 rounded-2xl border text-xs font-medium mb-4 ${quizFeedback.isCorrect ? 'bg-emerald-950/80 border-emerald-500 text-emerald-200' : 'bg-rose-950/80 border-rose-500 text-rose-200'}`}>
+                      {quizFeedback.text}
+                    </div>
+                  )}
+
+                  {!quizFeedback?.isCorrect && (
+                    <div className="flex justify-end">
+                      <button onClick={() => setActiveQuiz(null)} className="px-4 py-2 rounded-xl text-slate-400 hover:text-white text-xs font-semibold">
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* LEVEL CLEAR MODAL */}
+            {isLevelClear && (
+              <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4">
+                <div className="w-full max-w-md rounded-3xl bg-slate-900 border-2 border-emerald-400/60 p-6 sm:p-8 shadow-[0_0_60px_rgba(16,185,129,0.3)] text-center">
+                  <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 border border-emerald-400/50 flex items-center justify-center mx-auto mb-3 text-3xl">
+                    🏆
+                  </div>
+                  <span className="text-[10px] uppercase font-black tracking-widest text-emerald-400 font-mono">
+                    FLOW COMPLETE
+                  </span>
+                  <h2 className="text-2xl font-black text-white tracking-tight mt-1 mb-2">
+                    Level {blueprint.level} Clear!
+                  </h2>
+                  <p className="text-xs text-slate-300 mb-6">
+                    Continuous pipeline fluid pressure successfully routed to Storage Reservoir.
+                  </p>
+                  <div className="flex items-center justify-center gap-2 mb-6">
+                    {[1, 2, 3].map(s => (
+                      <span key={s} className="text-3xl">
+                        {stars >= s ? "⭐" : "☆"}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3 mb-6 font-mono text-xs">
+                    <div className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700">
+                      <span className="text-[10px] text-slate-400 block font-sans uppercase">Time</span>
+                      <span className="text-sm font-bold text-white">{timer}s</span>
+                    </div>
+                    <div className="p-3 rounded-2xl bg-emerald-950/60 border border-emerald-500/40">
+                      <span className="text-[10px] text-emerald-300 block font-sans uppercase">XP Gained</span>
+                      <span className="text-sm font-black text-emerald-300">+{120 + stars * 30} XP</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setupLevel(blueprint)}
+                      className="flex-1 py-3 px-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700"
+                    >
+                      Replay
+                    </button>
+                    <button
+                      onClick={() => {
+                        const nxt = (levelIdx + 1) % LEVELS.length;
+                        setLevelIdx(nxt);
+                        setupLevel(LEVELS[nxt]);
+                      }}
+                      className="flex-1 py-3 px-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 text-slate-950 font-black text-xs"
+                    >
+                      Next Circuit →
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* FOOTER */}
+          <footer className="text-center text-xs text-slate-500 pt-8 pb-4">
+            QUESTORA Educational Game System • Universal Knowledge Engine • Prototype runs standalone via Live Server
+          </footer>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // 5. SVG PIPE RENDERING COMPONENT
+    // =========================================================================
+    function PipeSVG({ type, isFlowing, isLocked }) {
+      const pipeColor = isLocked ? '#64748b' : isFlowing ? '#38bdf8' : '#6366f1';
+      const flowColor = isFlowing ? '#34d399' : '#0f172a';
+
+      if (type === 'straight') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <rect x="36" y="0" width="28" height="100" rx="4" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <rect x="42" y="0" width="16" height="100" fill={flowColor} />
+            <rect x="32" y="4" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="32" y="90" width="36" height="6" rx="2" fill="#d97706" />
+          </svg>
+        );
+      }
+      if (type === 'elbow') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <path d="M 36,0 L 64,0 L 64,36 Q 64,64 100,64 L 100,36 Q 36,36 36,0 Z" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <path d="M 50,0 Q 50,50 100,50" fill="none" stroke={flowColor} strokeWidth="16" />
+            <rect x="32" y="4" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="90" y="32" width="6" height="36" rx="2" fill="#d97706" />
+            <circle cx="50" cy="50" r="4" fill="#d97706" />
+          </svg>
+        );
+      }
+      if (type === 'tee') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <rect x="36" y="0" width="28" height="100" rx="4" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <rect x="50" y="36" width="50" height="28" rx="4" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <rect x="42" y="0" width="16" height="100" fill={flowColor} />
+            <rect x="50" y="42" width="50" height="16" fill={flowColor} />
+            <rect x="32" y="4" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="32" y="90" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="90" y="32" width="6" height="36" rx="2" fill="#d97706" />
+            <circle cx="50" cy="50" r="8" fill="#0f172a" stroke="#d97706" strokeWidth="2" />
+          </svg>
+        );
+      }
+      if (type === 'cross') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <rect x="36" y="0" width="28" height="100" rx="4" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <rect x="0" y="36" width="100" height="28" rx="4" fill="#1e293b" stroke={pipeColor} strokeWidth="3" />
+            <rect x="42" y="0" width="16" height="100" fill={flowColor} />
+            <rect x="0" y="42" width="100" height="16" fill={flowColor} />
+            <rect x="32" y="4" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="32" y="90" width="36" height="6" rx="2" fill="#d97706" />
+            <rect x="4" y="32" width="6" height="36" rx="2" fill="#d97706" />
+            <rect x="90" y="32" width="6" height="36" rx="2" fill="#d97706" />
+            <circle cx="50" cy="50" r="10" fill="#0f172a" stroke="#d97706" strokeWidth="2" />
+          </svg>
+        );
+      }
+      if (type === 'valve') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <circle cx="50" cy="50" r="38" fill="#0f172a" stroke="#06b6d4" strokeWidth="4" />
+            <circle cx="50" cy="50" r="28" fill="#164e63" />
+            <circle cx="50" cy="50" r="12" fill="#22d3ee" />
+            <rect x="50" y="40" width="50" height="20" fill="#06b6d4" stroke="#06b6d4" strokeWidth="2" />
+            <line x1="25" y1="50" x2="75" y2="50" stroke="#f59e0b" strokeWidth="4" />
+            <line x1="50" y1="25" x2="50" y2="75" stroke="#f59e0b" strokeWidth="4" />
+            <circle cx="50" cy="50" r="5" fill="#f59e0b" />
+          </svg>
+        );
+      }
+      if (type === 'tank') {
+        return (
+          <svg viewBox="0 0 100 100" className="w-full h-full">
+            <rect x="15" y="15" width="70" height="70" rx="16" fill="#0f172a" stroke={isFlowing ? '#34d399' : '#475569'} strokeWidth="4" />
+            <rect x="20" y={isFlowing ? '25' : '65'} width="60" height={isFlowing ? '55' : '15'} rx="10" fill={flowColor} />
+            <circle cx="50" cy="50" r="16" fill="#022c22" stroke="#d97706" strokeWidth="3" />
+            <line x1="50" y1="50" x2={isFlowing ? '62' : '38'} y2={isFlowing ? '38' : '50'} stroke="#f59e0b" strokeWidth="3" />
+            <circle cx="50" cy="50" r="3" fill="#ffffff" />
+            <rect x="0" y="40" width="20" height="20" fill={flowColor} />
+          </svg>
+        );
+      }
+      return null;
+    }
+
+    // Render Mount
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<PolymathPipelineApp />);
+  </script>
+</body>
+</html>

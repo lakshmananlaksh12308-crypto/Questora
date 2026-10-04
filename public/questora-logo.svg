@@ -1,0 +1,82 @@
+<svg viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="q-outer-ring" x1="50" y1="50" x2="350" y2="350" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#1e3a8a" />
+      <stop offset="50%" stopColor="#0f172a" />
+      <stop offset="100%" stopColor="#0284c7" />
+    </linearGradient>
+    <linearGradient id="q-flame" x1="250" y1="30" x2="250" y2="150" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#fef08a" />
+      <stop offset="35%" stopColor="#f59e0b" />
+      <stop offset="70%" stopColor="#f97316" />
+      <stop offset="100%" stopColor="#dc2626" />
+    </linearGradient>
+    <linearGradient id="q-gamepad" x1="150" y1="160" x2="350" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#38bdf8" />
+      <stop offset="50%" stopColor="#22d3ee" />
+      <stop offset="100%" stopColor="#34d399" />
+    </linearGradient>
+    <linearGradient id="q-shield" x1="250" y1="110" x2="250" y2="330" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#1e40af" />
+      <stop offset="100%" stopColor="#0f172a" />
+    </linearGradient>
+    <linearGradient id="q-ribbon" x1="100" y1="240" x2="400" y2="300" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#f97316" />
+      <stop offset="50%" stopColor="#fb923c" />
+      <stop offset="100%" stopColor="#f59e0b" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Ring Emblem Base -->
+  <circle cx="250" cy="200" r="175" fill="#0b1329" stroke="#1d4ed8" stroke-width="8" />
+  <circle cx="250" cy="200" r="162" fill="none" stroke="#0ea5e9" stroke-width="2.5" stroke-dasharray="4 6" opacity="0.6" />
+  <circle cx="250" cy="200" r="152" fill="#0f172a" stroke="#2563eb" stroke-width="4" />
+
+  <!-- Stars & Dots -->
+  <circle cx="150" cy="95" r="4" fill="#38bdf8" />
+  <circle cx="350" cy="95" r="4" fill="#38bdf8" />
+  <circle cx="120" cy="200" r="5" fill="#f97316" />
+  <circle cx="380" cy="200" r="5" fill="#f97316" />
+
+  <!-- Shield -->
+  <path d="M250 95 L325 125 V210 Q325 270 250 300 Q175 270 175 210 V125 Z" fill="url(#q-shield)" stroke="#ffffff" stroke-width="7" />
+  <path d="M250 108 L313 133 V205 Q313 256 250 284 Q187 256 187 205 V133 Z" fill="#09142e" stroke="#38bdf8" stroke-width="2.5" />
+
+  <!-- Ribbons -->
+  <path d="M120 220 Q160 198 200 230 L195 255 Q155 233 115 250 Z" fill="url(#q-ribbon)" stroke="#c2410c" stroke-width="3" />
+  <path d="M380 220 Q340 198 300 230 L305 255 Q345 233 385 250 Z" fill="url(#q-ribbon)" stroke="#c2410c" stroke-width="3" />
+
+  <!-- Flame Torch on Top -->
+  <path d="M225 110 L275 110 L268 126 L232 126 Z" fill="#38bdf8" stroke="#ffffff" stroke-width="3" />
+  <rect x="230" y="126" width="40" height="8" rx="2" fill="#0284c7" />
+  <path d="M250 35 Q275 70 285 95 Q280 112 250 112 Q220 112 215 95 Q225 70 250 35 Z" fill="url(#q-flame)" />
+  <path d="M250 52 Q266 75 270 95 Q262 105 250 105 Q238 105 230 95 Q234 75 250 52 Z" fill="#fef08a" />
+  <path d="M250 68 Q258 82 260 96 Q255 101 250 101 Q245 101 240 96 Q242 82 250 68 Z" fill="#ffffff" />
+
+  <!-- Gamepad Controller -->
+  <path d="M192 145 C220 138 280 138 308 145 C335 152 345 185 335 225 C330 242 312 250 298 238 L282 220 C265 225 235 225 218 220 L202 238 C188 250 170 242 165 225 C155 185 165 152 192 145 Z" fill="url(#q-gamepad)" stroke="#0f172a" stroke-width="5" />
+  <g fill="#0f172a">
+    <rect x="194" y="172" width="10" height="24" rx="2" />
+    <rect x="187" y="179" width="24" height="10" rx="2" />
+  </g>
+  <circle cx="295" cy="172" r="5" fill="#facc15" stroke="#0f172a" stroke-width="1.5" />
+  <circle cx="308" cy="183" r="5" fill="#38bdf8" stroke="#0f172a" stroke-width="1.5" />
+  <circle cx="282" cy="183" r="5" fill="#4ade80" stroke="#0f172a" stroke-width="1.5" />
+  <circle cx="295" cy="195" r="5" fill="#f43f5e" stroke="#0f172a" stroke-width="1.5" />
+  <path d="M250 162 L253 170 L262 170 L255 175 L257 183 L250 178 L243 183 L245 175 L238 170 L247 170 Z" fill="#facc15" stroke="#0f172a" stroke-width="1.5" />
+  <circle cx="220" cy="205" r="11" fill="#0f172a" />
+  <circle cx="220" cy="205" r="8" fill="#38bdf8" />
+  <circle cx="280" cy="205" r="11" fill="#0f172a" />
+  <circle cx="280" cy="205" r="8" fill="#38bdf8" />
+
+  <!-- Open Study Book -->
+  <g transform="translate(50, 10)">
+    <path d="M200 220 C180 216 155 216 135 224 V270 C155 262 180 262 200 266 C220 262 245 262 265 270 V224 C245 216 220 216 200 220 Z" fill="#ffffff" stroke="#0f172a" stroke-width="4" />
+    <line x1="200" y1="220" x2="200" y2="266" stroke="#0284c7" stroke-width="3" />
+    <path d="M133 270 C155 264 180 264 200 268 C220 264 245 264 267 270 L269 275 C247 268 221 268 200 272 C179 268 153 268 131 275 Z" fill="#0369a1" />
+  </g>
+
+  <!-- Typography -->
+  <text x="250" y="430" text-anchor="middle" font-family="'Montserrat', 'Inter', sans-serif" font-weight="900" font-size="46" fill="#1e293b" letter-spacing="2">QUESTORA</text>
+  <text x="250" y="465" text-anchor="middle" font-family="'Inter', sans-serif" font-weight="800" font-size="14" fill="#0284c7" letter-spacing="6">LEARN. CHALLENGE. MASTER.</text>
+</svg>

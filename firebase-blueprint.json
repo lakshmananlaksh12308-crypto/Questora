@@ -1,0 +1,181 @@
+{
+  "entities": {
+    "user": {
+      "title": "User",
+      "description": "Student profile, daily goals, XP, and learning preferences",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "maxLength": 128, "description": "Unique user ID" },
+        "email": { "type": "string", "maxLength": 256, "description": "User email address" },
+        "displayName": { "type": "string", "maxLength": 128, "description": "Display name of student" },
+        "preferredLanguage": { "type": "string", "maxLength": 64, "description": "Tutor language (e.g., English, Tanglish, Tamil, Hindi)" },
+        "xp": { "type": "number", "description": "Gamification XP earned" },
+        "level": { "type": "number", "description": "Current student level" },
+        "streak": { "type": "number", "description": "Current study day streak" },
+        "dailyGoalTotal": { "type": "number", "description": "Daily task target (default 8)" },
+        "dailyGoalCompleted": { "type": "number", "description": "Daily tasks completed" },
+        "rewardDurationMinutes": { "type": "number", "description": "Configurable reward break duration in minutes" },
+        "createdAt": { "type": "string", "description": "ISO timestamp of user creation" },
+        "updatedAt": { "type": "string", "description": "ISO timestamp of last update" }
+      },
+      "required": ["uid", "email"]
+    },
+    "task": {
+      "title": "Task",
+      "description": "Daily or scheduled study tasks derived from adaptive planner",
+      "type": "object",
+      "properties": {
+        "taskId": { "type": "string", "maxLength": 128, "description": "Unique task identifier" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "title": { "type": "string", "maxLength": 256, "description": "Title of the study task" },
+        "subject": { "type": "string", "maxLength": 128, "description": "Subject name" },
+        "difficulty": { "type": "string", "maxLength": 32, "description": "Easy, Medium, or Hard" },
+        "status": { "type": "string", "maxLength": 32, "description": "pending, in_progress, completed, needs_revision" },
+        "confidence": { "type": "number", "description": "Confidence percentage 0-100 or rating" },
+        "priority": { "type": "string", "maxLength": 32, "description": "high, medium, low" },
+        "timeSlot": { "type": "string", "maxLength": 64, "description": "Suggested schedule slot e.g. 6:00 PM" },
+        "estimatedMinutes": { "type": "number", "description": "Estimated study duration" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" },
+        "updatedAt": { "type": "string", "description": "Last update timestamp" }
+      },
+      "required": ["taskId", "userId", "title", "subject", "status"]
+    },
+    "subject": {
+      "title": "Subject",
+      "description": "Academic course or subject syllabus container",
+      "type": "object",
+      "properties": {
+        "subjectId": { "type": "string", "maxLength": 128, "description": "Subject ID" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "name": { "type": "string", "maxLength": 128, "description": "Subject title" },
+        "totalTopics": { "type": "number", "description": "Total detected topics" },
+        "completedTopics": { "type": "number", "description": "Completed topics count" },
+        "confidence": { "type": "number", "description": "Average subject confidence" },
+        "progressPercent": { "type": "number", "description": "Overall percentage complete" },
+        "examDate": { "type": "string", "maxLength": 64, "description": "Target exam date" }
+      },
+      "required": ["subjectId", "userId", "name"]
+    },
+    "topic": {
+      "title": "Topic",
+      "description": "Specific syllabus topic with difficulty and revision tracking",
+      "type": "object",
+      "properties": {
+        "topicId": { "type": "string", "maxLength": 128, "description": "Topic ID" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "subject": { "type": "string", "maxLength": 128, "description": "Parent subject" },
+        "unit": { "type": "string", "maxLength": 128, "description": "Unit or module" },
+        "chapter": { "type": "string", "maxLength": 128, "description": "Chapter name" },
+        "name": { "type": "string", "maxLength": 256, "description": "Topic name" },
+        "difficulty": { "type": "string", "maxLength": 32, "description": "Easy, Medium, Hard" },
+        "status": { "type": "string", "maxLength": 32, "description": "Mastered, In Progress, Needs Revision, Pending" },
+        "confidence": { "type": "number", "description": "Confidence percentage" },
+        "priority": { "type": "string", "maxLength": 32, "description": "High, Medium, Low" },
+        "revisionDate": { "type": "string", "maxLength": 64, "description": "Scheduled revision date" }
+      },
+      "required": ["topicId", "userId", "subject", "name"]
+    },
+    "studySession": {
+      "title": "StudySession",
+      "description": "Logged study session with SmartStudy understanding and mood ratings",
+      "type": "object",
+      "properties": {
+        "sessionId": { "type": "string", "maxLength": 128, "description": "Session ID" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "subject": { "type": "string", "maxLength": 128, "description": "Studied subject" },
+        "topic": { "type": "string", "maxLength": 256, "description": "Studied topic" },
+        "durationMinutes": { "type": "number", "description": "Duration in minutes" },
+        "understandingRating": { "type": "number", "description": "Student rating 1-5" },
+        "moodRating": { "type": "number", "description": "Student rating 1-5" },
+        "confidenceRating": { "type": "number", "description": "Student rating 1-5" },
+        "difficultyRating": { "type": "number", "description": "Student rating 1-5" },
+        "aiRecommendation": { "type": "string", "maxLength": 512, "description": "Adaptive recommendation generated by AI" },
+        "createdAt": { "type": "string", "description": "Creation timestamp" }
+      },
+      "required": ["sessionId", "userId", "subject", "topic"]
+    },
+    "quizResult": {
+      "title": "QuizResult",
+      "description": "Results from QuizMaster AI 3-question checks",
+      "type": "object",
+      "properties": {
+        "quizId": { "type": "string", "maxLength": 128, "description": "Quiz ID" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "topicId": { "type": "string", "maxLength": 128, "description": "Related topic ID" },
+        "topicName": { "type": "string", "maxLength": 256, "description": "Topic title" },
+        "subject": { "type": "string", "maxLength": 128, "description": "Subject name" },
+        "score": { "type": "number", "description": "Questions correct (e.g. 2)" },
+        "totalQuestions": { "type": "number", "description": "Total questions (default 3)" },
+        "accuracyPercent": { "type": "number", "description": "Calculated accuracy percentage" },
+        "adaptiveAction": { "type": "string", "maxLength": 128, "description": "Extra revision, In revision cycle, Progressed" },
+        "completedAt": { "type": "string", "description": "Timestamp when quiz was completed" }
+      },
+      "required": ["quizId", "userId", "topicName", "score"]
+    },
+    "sessionState": {
+      "title": "SessionState",
+      "description": "LOCKDIN study state synchronized with web UI and Chrome Extension",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "isStudyMode": { "type": "boolean", "description": "True when LOCKDIN focus mode is actively blocking distractions" },
+        "rewardBreakActive": { "type": "boolean", "description": "True when reward break is active" },
+        "activeTimer": { "type": "number", "description": "Remaining or elapsed seconds" },
+        "currentTaskId": { "type": "string", "maxLength": 128, "description": "Currently active task ID" },
+        "rewardDurationMinutes": { "type": "number", "description": "Configured reward duration" },
+        "updatedAt": { "type": "string", "description": "Last synchronization timestamp" }
+      },
+      "required": ["userId", "isStudyMode"]
+    },
+    "achievement": {
+      "title": "Achievement",
+      "description": "Gamification badges, streaks, and unlocked milestones",
+      "type": "object",
+      "properties": {
+        "achievementId": { "type": "string", "maxLength": 128, "description": "Achievement ID" },
+        "userId": { "type": "string", "maxLength": 128, "description": "Owner user UID" },
+        "code": { "type": "string", "maxLength": 64, "description": "Unique code e.g. streak_7" },
+        "title": { "type": "string", "maxLength": 128, "description": "Badge title" },
+        "description": { "type": "string", "maxLength": 256, "description": "Badge requirements" },
+        "icon": { "type": "string", "maxLength": 32, "description": "Emoji or icon identifier" },
+        "isUnlocked": { "type": "boolean", "description": "Unlock status" },
+        "unlockedAt": { "type": "string", "description": "Timestamp when unlocked" }
+      },
+      "required": ["achievementId", "userId", "title"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "user",
+      "description": "Student profiles and settings"
+    },
+    "/tasks/{taskId}": {
+      "schema": "task",
+      "description": "Planner study tasks"
+    },
+    "/subjects/{subjectId}": {
+      "schema": "subject",
+      "description": "Enrolled subjects"
+    },
+    "/topics/{topicId}": {
+      "schema": "topic",
+      "description": "Syllabus topics with revision state"
+    },
+    "/studySessions/{sessionId}": {
+      "schema": "studySession",
+      "description": "Logged focus sessions with ratings"
+    },
+    "/quizResults/{quizId}": {
+      "schema": "quizResult",
+      "description": "Quiz results and scoring"
+    },
+    "/sessionState/{userId}": {
+      "schema": "sessionState",
+      "description": "Chrome extension synchronized state"
+    },
+    "/achievements/{achievementId}": {
+      "schema": "achievement",
+      "description": "Gamification achievements"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "FocusFlow AI",
+  "description": "Study Smarter. Focus Deeper. Learn Better. An intelligent AI-powered study and focus ecosystem combining syllabus analysis, adaptive planning, distraction-free LOCKDIN focus mode, and multi-format learning.",
+  "requestFramePermissions": ["camera", "microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

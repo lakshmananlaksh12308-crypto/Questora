@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QUESTORA - Learn. Challenge. Master.</title>
+    <link rel="icon" type="image/svg+xml" href="/questora-logo.svg" />
+    <meta name="description" content="QUESTORA plans your studies, measures your understanding, protects your focus, quizzes your knowledge, and automatically adapts your learning journey with gamified quests." />
+    <meta property="og:title" content="QUESTORA - Learn. Challenge. Master." />
+    <meta property="og:description" content="QUESTORA plans your studies, measures your understanding, protects your focus, quizzes your knowledge, and automatically adapts your learning journey with gamified quests." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script>
+      (function() {
+        var isWsError = function(e) {
+          var t = (e && (e.message || (e.reason && e.reason.message) || e.reason || '')) + '';
+          return t.indexOf('WebSocket closed without opened') !== -1 ||
+                 t.indexOf('WebSocket is closed before the connection is established') !== -1 ||
+                 t.indexOf('failed: WebSocket is closed') !== -1;
+        };
+        window.addEventListener('unhandledrejection', function(evt) {
+          if (isWsError(evt)) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
+        });
+        window.addEventListener('error', function(evt) {
+          if (isWsError(evt)) {
+            evt.preventDefault();
+            evt.stopPropagation();
+          }
+        });
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
